@@ -1,78 +1,87 @@
-const form = document.getElementById("transaction-form");
-const conceptInput = document.getElementById("concept");
-const typeInput = document.getElementById("type");
-const categoryInput = document.getElementById("category");
-const amountInput = document.getElementById("amount");
+const messages = document.getElementById("messages");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+const chips = document.querySelectorAll(".chip");
 
-const totalIncomeEl = document.getElementById("totalIncome");
-const totalExpenseEl = document.getElementById("totalExpense");
-const totalBalanceEl = document.getElementById("totalBalance");
-const aiMessageEl = document.getElementById("aiMessage");
+function addMessage(text, sender) {
+  const row = document.createElement("div");
+  row.className = `message ${sender}`;
 
-let transactions = [
-  { concept: "Venta de servicio", type: "ingreso", category: "Ventas", amount: 2500 },
-  { concept: "Pago de renta", type: "gasto", category: "Renta", amount: 1200 },
-  { concept: "Compra de suministros", type: "gasto", category: "Operación", amount: 450 }
-];
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
 
-function formatMoney(value) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN"
-  }).format(value);
+  row.appendChild(bubble);
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
 }
 
-function updateSummary() {
-  const ingresos = transactions
-    .filter(item => item.type === "ingreso")
-    .reduce((sum, item) => sum + Number(item.amount), 0);
+function getResponse(prompt) {
+  const p = prompt.toLowerCase();
 
-  const gastos = transactions
-    .filter(item => item.type === "gasto")
-    .reduce((sum, item) => sum + Number(item.amount), 0);
-
-  const saldo = ingresos - gastos;
-
-  totalIncomeEl.textContent = formatMoney(ingresos);
-  totalExpenseEl.textContent = formatMoney(gastos);
-  totalBalanceEl.textContent = formatMoney(saldo);
-
-  if (saldo > 0) {
-    aiMessageEl.textContent =
-      "El agente de IA concluye que la actividad financiera está en balance positivo. La operación sigue siendo saludable y se recomienda seguir controlando gastos no esenciales.";
-  } else if (saldo === 0) {
-    aiMessageEl.textContent =
-      "El agente de IA indica que el balance es neutro. Es recomendable revisar costos operativos para mejorar la rentabilidad.";
-  } else {
-    aiMessageEl.textContent =
-      "El agente de IA detecta un déficit financiero. Se recomienda reducir gastos y buscar más ingresos o optimizar procesos contables.";
+  if (p.includes("html")) {
+    return "HTML es el lenguaje que se usa para estructurar una página web. Sirve para crear títulos, párrafos, botones, imágenes y secciones.";
   }
+
+  if (p.includes("css")) {
+    return "CSS se usa para darle estilo a la página: colores, fuentes, márgenes, fondos, tamaños y diseño visual.";
+  }
+
+  if (p.includes("javascript") || p.includes("js")) {
+    return "JavaScript hace que la página sea interactiva. Se usa para mostrar mensajes, validar formularios, cambiar contenido y hacer lógica.";
+  }
+
+  if (p.includes("variable")) {
+    return 'Una variable es un contenedor para guardar información. Ejemplo: let nombre = "Ana";';
+  }
+
+  if (p.includes("funcion")) {
+    return 'Una función es un bloque de código reutilizable. Ejemplo: function saludar() { console.log("Hola"); }';
+  }
+
+  if (p.includes("if") || p.includes("condicion")) {
+    return 'La condición if sirve para ejecutar algo si se cumple una regla. Ejemplo: if (edad >= 18) { console.log("Eres mayor de edad"); }';
+  }
+
+  if (p.includes("for") || p.includes("bucle")) {
+    return "Un for sirve para repetir instrucciones varias veces. Se usa mucho para recorrer listas y arreglos.";
+  }
+
+  if (p.includes("hola")) {
+    return "¡Hola! Puedo ayudarte a aprender HTML, CSS, JavaScript, variables y funciones.";
+  }
+
+  if (p.includes("ejemplo")) {
+    return 'Ejemplo básico: let edad = 20; console.log("Mi edad es " + edad);';
+  }
+
+  return "Puedo ayudarte con HTML, CSS, JavaScript, variables, funciones y lógica de programación. Pregúntame otra cosa.";
 }
 
-form.addEventListener("submit", function (event) {
-  event.preventDefault();
+function sendMessage() {
+  const text = input.value.trim();
+  if (!text) return;
 
-  const concepto = conceptInput.value.trim();
-  const tipo = typeInput.value;
-  const categoria = categoryInput.value.trim();
-  const monto = Number(amountInput.value);
+  addMessage(text, "user");
+  input.value = "";
 
-  if (!concepto || !categoria || !monto || monto <= 0) {
-    aiMessageEl.textContent = "Ingresa datos válidos para registrar el movimiento contable.";
-    return;
+  const answer = getResponse(text);
+  setTimeout(() => {
+    addMessage(answer, "bot");
+  }, 300);
+}
+
+sendBtn.addEventListener("click", sendMessage);
+
+input.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    sendMessage();
   }
-
-  transactions.push({
-    concept: concepto,
-    type: tipo,
-    category: categoria,
-    amount: monto
-  });
-
-  form.reset();
-  conceptInput.focus();
-
-  updateSummary();
 });
 
-updateSummary();
+chips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    input.value = chip.textContent;
+    sendMessage();
+  });
+});
